@@ -77,6 +77,14 @@
 
 ---
 
+###  exe界面展示：
+<img width="1113" height="626" alt="fdff57eb-f116-4eb7-9026-ff6aeba45b05" src="https://github.com/user-attachments/assets/b84eb61e-b146-4a87-9d53-ea110903503e" />
+
+<img width="1113" height="626" alt="50ca0117-9d4f-4b6b-8f82-450064410036" src="https://github.com/user-attachments/assets/6235d18b-c014-4849-a9a4-20e08603da79" />
+
+<img width="1113" height="626" alt="49ac645c-25cd-440c-bd93-1af7a18f987e" src="https://github.com/user-attachments/assets/decb9372-3d26-4f9e-8412-608796a9964d" />
+
+
 ## 📝 支持的重命名格式
 
 工具内置了以下几种常用格式，你也可以在 `invoice_tool.py` 的 `PRESET_FORMATS` 字典中轻松添加新格式：
