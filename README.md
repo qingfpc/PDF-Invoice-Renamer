@@ -17,7 +17,7 @@
 如果你不懂编程，只想快速使用本工具，请按照以下步骤操作：
 
 1.  **下载程序**：
-    * 进入本仓库的 [Releases 页面]。
+    * 进入本仓库的 [Releases 页面](https://github.com/qingfpc/PDF-Invoice-Renamer/releases/latest) 下载最新 Release。
     * 下载 `InvoiceRenamer.exe` 文件。
 
 2.  **运行工具**：
