@@ -30,16 +30,14 @@ If you are not a developer and just want to use the tool, follow these steps:
 
 1.  **Download**:
     * Go to the [Releases Page](https://github.com/qingfpc/PDF-Invoice-Renamer/releases/latest).
-    * Download the latest executable file (e.g., `InvoiceHelper.exe`).
+    * Choose the tool that fits your needs:
+        * `InvoiceHelper_AllInOne.exe`: **All-in-One Helper** for both auto-renaming and A4 layout merging (Recommended).
+        * `InvoiceRenamer_Only.exe`: **Renamer Tool** for automatic renaming only.
+        * `InvoiceMerger_Only.exe`: **Merger Tool** for A4 layout and PDF merging only.
 
-2.  **Run**:
-    * Double-click `InvoiceHelper.exe`.
-    * **Step 1**: Input (or drag and drop) the folder path containing your invoices.
-    * **Step 2**: Choose whether to rename. If yes, select a format format (e.g., input `1` for `Date_Seller_Amount`).
-    * **Step 3**: Choose whether to merge PDFs. Confirm, and the program will generate an A4 layout PDF containing all invoices.
-
-3.  **Result**:
-    * Your files will be renamed cleanly, and a new file named `Invoice_Collection_Timestamp.pdf` will be created for easy printing.
+2. **Run**:
+    * Double-click the `.exe` file.
+    * Follow the prompts to input (or drag and drop) your invoice folder path.
 
 ---
 
