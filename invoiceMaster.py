@@ -133,70 +133,81 @@ def run_renamer(target_path):
 
 
 def run_merger(input_dir_path):
-    """执行合并逻辑"""
+    """
+        执行合并逻辑。
+        注意：为了兼容全电发票的特殊图层（防止印章丢失），
+        这里放弃了纯矢量合并，改用高清位图渲染方案。
+        """
     print("\n" + "-" * 40)
-    print(" >>> 进入合并模式 (A4排版)")
+    print(" >>> 进入【截图式】强力合并模式")
+    print("     (解决一切印章丢失问题，但文字将转为图片)")
     print("-" * 40)
 
     # 1. 确定输出目录
     out_input = clean_path_input("请输入输出目录 (直接回车 = 输出到原文件夹): ")
-    if out_input:
-        output_dir = Path(out_input)
-        if not output_dir.exists():
-            try:
-                output_dir.mkdir(parents=True, exist_ok=True)
-                print(f"已创建输出目录: {output_dir}")
-            except:
-                print("创建目录失败，将使用原文件夹。")
-                output_dir = input_dir_path
-    else:
-        output_dir = input_dir_path
-        print("将输出到原文件夹。")
+    output_dir = Path(out_input) if out_input else input_dir_path
+    if not output_dir.exists(): output_dir.mkdir(parents=True, exist_ok=True)
 
-    output_filename = output_dir / f"发票合集_{int(time.time())}.pdf"
+    output_filename = output_dir / f"发票合集_图片版_{int(time.time())}.pdf"
 
-    # 2. 重新扫描文件 (确保包含刚才重命名后的文件)
+    # 2. 扫描文件
     pdf_files = sorted([f for f in input_dir_path.glob("*.pdf") if "发票合集" not in f.name])
-
     if not pdf_files:
         print("没有找到可合并的PDF文件。")
         return
 
-    print(f"准备合并 {len(pdf_files)} 张发票...")
     doc_out = fitz.open()
 
+    # 设置渲染清晰度 (2.0 = 144 DPI, 3.0 = 216 DPI)
+    # 3.0 对于打印足够清晰，且文件体积可控
+    ZOOM_MATRIX = fitz.Matrix(3.0, 3.0)
+
     for i in range(0, len(pdf_files), 2):
-        # 创建A4页面
+        # 创建A4空白页
         page = doc_out.new_page(width=A4_WIDTH, height=A4_HEIGHT)
+
+        def paste_invoice_as_image(file_path, target_rect):
+            try:
+                src_doc = fitz.open(file_path)
+                src_page = src_doc[0]
+
+                # --- 核心修改：渲染为图片 (Rasterization) ---
+                # 这会将当前页面看到的所有内容（含印章）转换成像素数据
+                pix = src_page.get_pixmap(matrix=ZOOM_MATRIX, alpha=False)
+
+                # 将图片插入到目标 PDF 页面
+                # keep_proportion=True 保证发票不会变形
+                page.insert_image(
+                    target_rect,
+                    pixmap=pix,
+                    keep_proportion=True
+                )
+                src_doc.close()
+            except Exception as e:
+                print(f"  处理 {file_path.name} 失败: {e}")
 
         # --- 上半部分 ---
         file1 = pdf_files[i]
         print(f"排版: [上] {file1.name}")
-        try:
-            src1 = fitz.open(file1)
-            rect_top = fitz.Rect(0, 0, A4_WIDTH, A4_HEIGHT / 2)
-            page.show_pdf_page(rect_top, src1, 0)
-            src1.close()
-        except Exception as e:
-            print(f"  读取失败: {e}")
+        # 定义上半部分区域 (留一点边距美观)
+        rect_top = fitz.Rect(10, 10, A4_WIDTH - 10, A4_HEIGHT / 2 - 10)
+        paste_invoice_as_image(file1, rect_top)
 
         # --- 下半部分 ---
         if i + 1 < len(pdf_files):
             file2 = pdf_files[i + 1]
             print(f"排版: [下] {file2.name}")
-            try:
-                src2 = fitz.open(file2)
-                rect_bottom = fitz.Rect(0, A4_HEIGHT / 2, A4_WIDTH, A4_HEIGHT)
-                page.show_pdf_page(rect_bottom, src2, 0)
-                src2.close()
-            except Exception as e:
-                print(f"  读取失败: {e}")
+            # 定义下半部分区域
+            rect_bottom = fitz.Rect(10, A4_HEIGHT / 2 + 10, A4_WIDTH - 10, A4_HEIGHT - 10)
+            paste_invoice_as_image(file2, rect_bottom)
         else:
             print("排版: [下] 空白")
 
     try:
-        doc_out.save(output_filename)
-        print(f"\n✅ 合并成功！文件已保存至:\n{output_filename}")
+        # 保存文件
+        # deflate=True 压缩图片数据，减小体积
+        doc_out.save(output_filename, deflate=True)
+        print(f"\n✅ 合并成功！(图片模式)\n文件已保存至: {output_filename}")
     except Exception as e:
         print(f"\n❌ 保存PDF失败: {e}")
         print("请检查文件是否被占用。")
