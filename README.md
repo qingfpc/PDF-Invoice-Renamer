@@ -1,137 +1,160 @@
 [English](README.en.md) | [简体中文](README.md)
 
-# PDF Invoice Helper (电子发票助手：重命名 + A4合并)
+# PDF Invoice Helper：电子发票重命名与 A4 合并
 
-这是一个基于 Python 开发的轻量级办公自动化工具，旨在帮助财务人员、行政人员或开发者批量处理 PDF 电子发票。
+批量读取 PDF 电子发票中的日期、金额、发票号码和购销双方名称，按所选格式重命名，再将 PDF 页面上下两张排版到 A4 纸上。你可以运行全功能程序，也可以分别使用重命名或合并工具。
 
-它不仅能自动提取发票中的**关键信息**（如日期、销售方、金额、发票号等）进行重命名，还能将多张发票**智能排版合并**到一个 PDF 文件中（A4 纸上下两张），极大地简化了报销打印流程。
+本 README 描述当前 `main` 分支源码。已发布 EXE 的功能以对应 [Release 说明](https://github.com/qingfpc/PDF-Invoice-Renamer/releases)为准；使用当前源码的功能，请按下文构建程序。
 
-## ✨ 功能特点
+## 功能与处理范围
 
-### 1. 智能重命名
-* **自动提取**：利用 `pdfplumber` 提取 PDF 文本，识别并校验发票代码、号码、日期、金额及购销双方；缺失必要字段时保留原名。
-* **格式自定义**：支持多种重命名格式（如：`日期_销售方_金额` 或 `发票代码_发票号码`）。
-* **智能防重**：重名时自动添加序号；重复运行保持已有名称稳定。
+处理时遵循以下规则：
 
-### 2. A4 自动排版合并
-* **智能拼版**：将两张发票上下排列放置在一张 A4 页面上（2合1），节省纸张。
-* **多页支持**：逐页处理每份 PDF；源页面总数为奇数时，最后一页放在上半页。
-* **印章保留**：统一使用 216 DPI 图片排版，保留可见印章和注释，合并结果的文字无法选中。
-* **失败汇总**：部分失败会明确提示遗漏；全部失败不生成空白结果。已有合集自动跳过。
-* **自定义输出**：接受目录或完整 PDF 文件名，自动创建目录；已有输出不覆盖，另加序号。
+- **重命名校验**：识别到有效发票号码后，再检查命名格式需要的字段。无法识别或缺少必要字段时保留原名，并报告原因
+- **金额处理**：支持负数和千分位金额，命名时统一保留两位小数，例如 `1,234.56` 转为 `1234.56`
+- **重复运行**：重名时添加序号，已符合格式的文件保留名称；已有输出文件不会被覆盖
+- **A4 排版**：逐页处理每份 PDF，每张 A4 上下放置两个源页面；页面总数为奇数时，最后半页留白
+- **印章与文字**：两个合并入口均以 216 DPI 渲染可见页面及注释。合并结果是图片，文字无法选中或搜索，适合打印；归档请保留原始发票
+- **失败报告**：部分页面失败时输出成功页面，并列出遗漏；没有可合并页面时不生成空白结果
 
-### 3. 便捷易用
-* **批量处理**：一键处理文件夹内所有 PDF 文件。
-* **开箱即用**：提供打包好的 `.exe` 程序，无需安装 Python 环境即可在 Windows 上运行。
+仅处理所选文件夹的当前层级，不扫描子文件夹，支持 `.pdf` 和 `.PDF`。重命名只读取第一页的发票信息；合并处理所有页面，并跳过本工具生成的已有合集。
 
----
+**合并不判断 PDF 是否为发票。** 同一目录中未能重命名、但仍可读取的 PDF 也会参与合并。请将计划打印的文件放在单独的文件夹中。
 
-## 🚀 快速开始 (针对普通用户)
+## 使用 Windows EXE
 
-如果你不懂编程，只想快速使用本工具，请按照以下步骤操作：
+从 [Releases 页面](https://github.com/qingfpc/PDF-Invoice-Renamer/releases/latest)选择对应版本的 EXE。下载的名称可能带版本后缀，例如 `InvoiceHelper_AllInOne_v2.0.1.exe`；下表列出当前源码构建的名称：
 
-1.  **下载程序**：
-    * 进入本仓库的 [Releases 页面](https://github.com/qingfpc/PDF-Invoice-Renamer/releases/latest) 下载最新 Release。
-    * 根据需求下载对应的工具：
-        * `InvoiceHelper_AllInOne.exe`：**全功能助手**，支持自动重命名并合并排版（推荐）。
-        * `InvoiceRenamer_Only.exe`：**重命名工具**，仅执行发票信息提取与重命名。
-        * `InvoiceMerger_Only.exe`：**排版工具**，仅执行发票 A4 拼版与 PDF 合并。
+| 程序 | 功能 |
+| --- | --- |
+| `InvoiceHelper_AllInOne.exe` | 依次选择是否重命名、是否合并 |
+| `InvoiceRenamer_Only.exe` | 仅提取发票信息并重命名 |
+| `InvoiceMerger_Only.exe` | 仅合并 PDF 页面，支持扫描件 |
 
-2. **运行工具**：
-    * 双击打开对应的 `.exe` 文件。
-    * 按照屏幕提示输入（或直接拖入）存放发票的文件夹路径，并选择对应选项即可。
+双击程序，按提示输入或拖入文件夹路径。合并时可输入输出目录或完整 PDF 文件名；直接回车表示输出到输入目录。不存在的输出目录会自动创建，重名输出自动追加序号。
 
----
+## 从源码运行
 
-## 💻 开发指南 (针对开发者)
+已在 Windows 11、64 位 Python 3.12 上验证。下面的 `python` 命令需要指向 Python 3.12，先用 `python --version` 检查；如使用其他安装或 Conda 环境，请改用对应解释器。
 
-如果你想查看源码或进行二次开发，请参考以下说明。
+克隆仓库，创建项目环境并安装运行依赖：
 
-### 📂 项目结构
+```powershell
+git clone https://github.com/qingfpc/PDF-Invoice-Renamer.git
+cd PDF-Invoice-Renamer
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
 
-* `invoiceMaster.py`: **[推荐] 全功能主程序**。整合了重命名与合并功能，提供完整的交互式 CLI。
-* `mergeInvoices.py`: **独立合并脚本**。仅包含 A4 排版合并逻辑。
-* `renameInvoices.py`: **兼容重命名类与命令行入口**，可传入目录和命名格式。
-* `invoice_core.py`: **共享解析与重命名逻辑**，返回每个文件的处理结果。
-* `invoice_merge.py`: **共享多页排版逻辑**，返回页数、失败项和输出位置。
-* `tests/`: 真实 PDF 文件的回归测试与完整命令行流程测试。
-* `invoiceTool.py`: (旧版) 仅包含重命名功能的入口脚本。
+从仓库根目录运行所需入口：
 
-### 🔧 环境依赖
+```powershell
+.\.venv\Scripts\python.exe invoiceMaster.py
+```
 
-已在 Windows 11、Python 3.12 上验证。建议使用项目虚拟环境，依赖版本见 requirements 文件和 constraints.txt。
+独立工具分别使用以下命令：
 
-1.  克隆仓库：
-    ```powershell
-    git clone https://github.com/qingfpc/PDF-Invoice-Renamer.git
-    ```
+```powershell
+.\.venv\Scripts\python.exe invoiceTool.py
+.\.venv\Scripts\python.exe mergeInvoices.py
+```
 
-2.  创建环境并安装依赖：
-    ```powershell
-    cd PDF-Invoice-Renamer
-    python -m venv .venv
-    .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-    ```
+## 选择重命名格式
 
-3.  运行脚本：
-    ```powershell
-    .\.venv\Scripts\python.exe invoiceMaster.py
-    ```
+交互入口提供四种格式。共享预设位于 [invoice_core.py](invoice_core.py) 的 `PRESET_FORMATS` 中：
 
-### 📦 如何打包成 EXE
+| 选项 | 格式 | 文件名示例 |
+| --- | --- | --- |
+| 1 | `{date}_{seller}_{amount}` | `20231225_京东世纪贸易_299.00.pdf` |
+| 2 | `{seller}_{date}_{amount}` | `京东世纪贸易_20231225_299.00.pdf` |
+| 3 | `{code}_{number}` | `033001234567_12345678.pdf` |
+| 4 | `{amount}_{seller}` | `299.00_京东世纪贸易.pdf` |
 
-如果你修改了代码并想重新打包，请使用 `PyInstaller`：
+自定义格式可以使用以下字段：
+
+| 字段 | 含义 |
+| --- | --- |
+| `{date}` | 开票日期，格式为 `YYYYMMDD` |
+| `{seller}` | 销售方名称 |
+| `{buyer}` | 购买方名称 |
+| `{amount}` | 两位小数的金额，可为负数 |
+| `{code}` | 10 位或 12 位发票代码 |
+| `{number}` | 8 位或 20 位发票号码 |
+
+使用命令行传入目录和自定义格式，例如按发票号码和金额命名：
+
+```powershell
+.\.venv\Scripts\python.exe renameInvoices.py "D:\发票" `
+    --format "{number}_{amount}"
+```
+
+全电发票没有发票代码时，选项 3 会保留原名并报告缺少 `code`。请选择其他字段齐全的格式，或用上面的命令改为 `{number}`。
+
+## 运行测试
+
+从仓库根目录安装开发依赖，再执行测试；仅安装 `requirements.txt` 不包含测试使用的 PDF 生成库：
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+```
+
+测试生成临时 PDF，实际执行解析、重命名、渲染、合并和命令行进程，不修改个人发票。覆盖金额、字段缺失、文件冲突、重复运行、多页、旋转页、注释、扫描件、损坏及加密文件；生成样例不代表所有真实发票模板均已验证。
+
+## 构建与验证 EXE
+
+安装开发依赖后，使用 PowerShell 7 的 `pwsh` 从仓库根目录运行打包脚本：
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
 pwsh -NoLogo -NoProfile -File .\build.ps1
 ```
 
-脚本在 `dist/` 生成三个 EXE，名称与下载说明一致。构建产物不提交到 Git。
+脚本在 `dist/` 生成上表中的三个 EXE。`build/`、`dist/` 和 `.venv/` 均不提交到 Git；本地构建也不会自动更新 GitHub Release 附件。
 
-### 测试与模块调用
-
-```powershell
-.\.venv\Scripts\python.exe -m unittest discover -s tests -v
-.\.venv\Scripts\python.exe renameInvoices.py "D:\发票" --format "{number}_{amount}"
-```
-
-构建完成后，可复用交互流程测试验证三个 EXE：
+构建完成后，复用交互流程测试验证三个 EXE：
 
 ```powershell
 $env:INVOICE_TEST_EXE_DIR = (Join-Path (Get-Location) 'dist')
-.\.venv\Scripts\python.exe -m unittest tests.test_cli -v
-Remove-Item Env:\INVOICE_TEST_EXE_DIR
+try {
+    .\.venv\Scripts\python.exe -m unittest tests.test_cli -v
+} finally {
+    Remove-Item Env:\INVOICE_TEST_EXE_DIR -ErrorAction SilentlyContinue
+}
 ```
 
-测试会创建临时 PDF 并实际读写、渲染；不会修改个人发票。`InvoiceRenamer` 类继续可用。
-`extract_invoice_data()` 对不可识别文件返回 `None`；可识别发票中缺失的字段也是 `None`，不会伪造零金额。
-全电发票没有发票代码时，选择含 `{code}` 的格式会保留原名，请改用 `{number}` 等格式。
+## 模块与返回结果
 
----
+代码按以下职责组织：
 
-## 🖼️ 界面展示
-<img width="1113" height="626" alt="fdff57eb-f116-4eb7-9026-ff6aeba45b05" src="https://github.com/user-attachments/assets/b84eb61e-b146-4a87-9d53-ea110903503e" />
+| 文件 | 职责 |
+| --- | --- |
+| `invoiceMaster.py` | 全功能交互入口 |
+| `invoiceTool.py` | 独立重命名交互入口 |
+| `mergeInvoices.py` | 独立合并交互入口 |
+| `renameInvoices.py` | 可复用的 `InvoiceRenamer` 类及自定义格式命令行入口 |
+| `invoice_core.py` | 共享解析、字段校验、路径清洗与重命名 |
+| `invoice_merge.py` | 共享多页排版、输出保护与失败汇总 |
+| `build.ps1` | 构建三个 Windows EXE |
+| `tests/` | PDF 与命令行流程回归测试 |
+| `requirements.txt` | 运行依赖 |
+| `requirements-dev.txt` | 测试和打包依赖 |
+| `constraints.txt` | 已验证的 Windows / Python 3.12 依赖版本 |
 
-<img width="1113" height="626" alt="50ca0117-9d4f-4b6b-8f82-450064410036" src="https://github.com/user-attachments/assets/6235d18b-c014-4849-a9a4-20e08603da79" />
+`extract_invoice_data()` 对不可识别文件返回 `None`；可识别发票中缺失的字段也是 `None`，不会返回“未知”占位符或伪造零金额。直接调用 `read_invoice_data()` 时，识别失败会抛出异常。调用方需先检查字段，再格式化文件名。
 
-<img width="1113" height="626" alt="49ac645c-25cd-440c-bd93-1af7a18f987e" src="https://github.com/user-attachments/assets/decb9372-3d26-4f9e-8412-608796a9964d" />
+`rename_invoices()` 和 `InvoiceRenamer.rename()` 返回每个文件的结果，状态为 `renamed`、`skipped` 或 `failed`。`merge_pdf_files()` 返回源页面数、合并页面数、输出位置、失败项和跳过项；没有可用页面时 `output` 为 `None`。
 
+## 已知限制
 
-## 📝 支持的重命名格式
+选择输入文件和处理结果时请注意以下限制：
 
-工具内置了以下几种常用格式，你也可以在代码的 `PRESET_FORMATS` 字典中轻松添加新格式：
+- 重命名针对中国标准电子发票，要求识别到 8 位或 20 位发票号码；非标准票据可能无法识别
+- 没有 OCR 功能，扫描件不能提取字段重命名，但可以合并打印
+- 购销双方名称仍依赖标签和版式顺序推断，特殊模板需要核对识别结果
+- 重命名读取第一页，多页文件按第一页信息命名；合并则保留每个可读取页面
+- 加密 PDF 需要先解密，损坏文件会记录为失败
 
-* **格式 1**: `{date}_{seller}_{amount}` (例: `20231225_京东世纪贸易_299.00.pdf`)
-* **格式 2**: `{seller}_{date}_{amount}` (例: `京东世纪贸易_20231225_299.00.pdf`)
-* **格式 3**: `{code}_{number}` (例: `033001234567_12345678.pdf`)
-* **格式 4**: `{amount}_{seller}` (例: `299.00_京东世纪贸易.pdf`)
-
-## ⚠️ 局限性与已知问题
-
-* **仅支持标准电子发票**：目前主要针对中国增值税电子普通/专用发票。对于非标准的行程单、定额发票可能无法精确提取。
-* **不支持纯图片扫描件**：如果 PDF 是由图片直接转换而来（无法选中文字），重命名功能无法提取信息；图片扫描件仍可合并打印。
-
-## 📄 License
+## License
 
 MIT License
