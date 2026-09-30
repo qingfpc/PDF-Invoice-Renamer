@@ -6,6 +6,8 @@ Read dates, amounts, invoice numbers, and buyer and seller names from PDF electr
 
 This README describes the current `main` source. Published EXE behavior follows its [release notes](https://github.com/qingfpc/PDF-Invoice-Renamer/releases). Build from source to use the features documented here.
 
+The current stable version is [v3.0.0](https://github.com/qingfpc/PDF-Invoice-Renamer/releases/tag/v3.0.0). See the [release notes](docs/releases/v3.0.0.md) for changes and Python API migration details.
+
 ## Features and processing scope
 
 Processing follows these rules:
@@ -23,7 +25,7 @@ Only the selected folder is scanned, without subfolders; both `.pdf` and `.PDF` 
 
 ## Use the Windows EXEs
 
-Choose the EXEs for your version on the [releases page](https://github.com/qingfpc/PDF-Invoice-Renamer/releases/latest). Download names may include a version suffix, such as `InvoiceHelper_AllInOne_v2.0.1.exe`. Builds from the current source use these names:
+Download the EXEs from the [releases page](https://github.com/qingfpc/PDF-Invoice-Renamer/releases/latest). The v3.0.0 attachments and current source builds use the names below. Check the attached filenames for other versions:
 
 | Application | Purpose |
 | --- | --- |
@@ -157,4 +159,4 @@ Consider these limits when selecting files and checking results:
 
 ## License
 
-MIT License
+Source code in this repository uses the [MIT License](LICENSE). Bundled dependencies retain their own licenses, including the open-source AGPLv3 license of PyMuPDF/MuPDF. See [third-party notices](THIRD_PARTY_NOTICES.md) and the release's `THIRD_PARTY_LICENSES.zip`.

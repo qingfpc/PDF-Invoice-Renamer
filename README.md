@@ -6,6 +6,8 @@
 
 本 README 描述当前 `main` 分支源码。已发布 EXE 的功能以对应 [Release 说明](https://github.com/qingfpc/PDF-Invoice-Renamer/releases)为准；使用当前源码的功能，请按下文构建程序。
 
+当前稳定版为 [v3.0.0](https://github.com/qingfpc/PDF-Invoice-Renamer/releases/tag/v3.0.0)，更新及 Python 接口兼容性说明见[发布说明](docs/releases/v3.0.0.md)。
+
 ## 功能与处理范围
 
 处理时遵循以下规则：
@@ -23,7 +25,7 @@
 
 ## 使用 Windows EXE
 
-从 [Releases 页面](https://github.com/qingfpc/PDF-Invoice-Renamer/releases/latest)选择对应版本的 EXE。下载的名称可能带版本后缀，例如 `InvoiceHelper_AllInOne_v2.0.1.exe`；下表列出当前源码构建的名称：
+从 [Releases 页面](https://github.com/qingfpc/PDF-Invoice-Renamer/releases/latest)下载 EXE。v3.0.0 附件与当前源码构建的程序使用下表名称；其他版本请以对应 Release 的附件为准：
 
 | 程序 | 功能 |
 | --- | --- |
@@ -157,4 +159,4 @@ try {
 
 ## License
 
-MIT License
+本仓库源码使用 [MIT License](LICENSE)。EXE 打包依赖保留各自的许可，包含使用 AGPLv3 开源许可的 PyMuPDF/MuPDF；详见[第三方许可说明](THIRD_PARTY_NOTICES.md)和 Release 的 `THIRD_PARTY_LICENSES.zip`。
