@@ -1,0 +1,3 @@
+-c constraints.txt
+pdfplumber==0.11.9
+PyMuPDF==1.26.4

@@ -1,0 +1,18 @@
+# Validated Windows / Python 3.12 dependency snapshot.
+altgraph==0.17.5
+cffi==2.1.1
+charset-normalizer==3.5.2
+cryptography==50.0.2
+packaging==26.3
+pdfminer.six==20251230
+pdfplumber==0.11.9
+pefile==2023.2.7
+pillow==12.3.0
+pycparser==3.0
+pyinstaller==6.16.0
+pyinstaller-hooks-contrib==2026.8
+PyMuPDF==1.26.4
+pypdfium2==5.13.0
+pywin32-ctypes==0.2.3
+reportlab==4.4.9
+setuptools==84.0.0

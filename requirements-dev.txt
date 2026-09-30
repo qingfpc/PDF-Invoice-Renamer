@@ -1,0 +1,3 @@
+-r requirements.txt
+reportlab==4.4.9
+pyinstaller==6.16.0
