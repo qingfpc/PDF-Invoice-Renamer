@@ -11,12 +11,14 @@ It not only automatically extracts **key information** (such as date, seller, am
 ### 1. Smart Renaming
 * **Auto Extraction**: Uses `pdfplumber` to extract text from PDFs, identifying invoice codes, numbers, dates, amounts, and sellers.
 * **Custom Formats**: Supports multiple renaming formats (e.g., `Date_Seller_Amount` or `Code_Number`).
-* **Conflict Prevention**: Automatically adds a sequence number if the target filename already exists.
+* **Conflict Prevention**: Adds a suffix for collisions and keeps names stable on repeat runs. Missing required fields preserve the original name.
 
 ### 2. A4 Layout Merging
 * **Smart Layout**: Arranges two invoices vertically on a single A4 page (2-up layout) to save paper.
-* **Single Page Handling**: If there is an odd number of invoices, the last page will contain the invoice in the top half.
-* **Custom Output**: Supports exporting the merged file to a specified directory.
+* **All Pages**: Processes every page of each PDF; an odd final page occupies the upper half.
+* **Visible Stamps**: Both tools use 216 DPI image rendering, including annotations. Output text is no longer selectable.
+* **Honest Results**: Reports partial failures and creates no blank output when every input fails. Existing bundles are skipped.
+* **Custom Output**: Accepts a directory or full PDF filename, creates directories, and adds suffixes instead of overwriting existing files.
 
 ### 3. Easy to Use
 * **Batch Processing**: Process all PDF files in a folder with one click.
@@ -47,43 +49,65 @@ If you want to view the source code or contribute, please refer to the following
 
 ### 📂 Project Structure
 
-* `invoice_master.py`: **[Recommended] Main Program**. Combines renaming and merging features with a full CLI.
-* `invoice_merger.py`: **Standalone Merger**. Contains only the A4 layout and merging logic.
-* `renameInvoices.py`: **Core Renaming Logic**. Encapsulates the PDF parsing class.
+* `invoiceMaster.py`: **[Recommended] Main Program**. Combines renaming and merging features with a full CLI.
+* `mergeInvoices.py`: **Standalone Merger**. Contains only the A4 layout and merging logic.
+* `renameInvoices.py`: **Reusable Class and CLI** with folder and format arguments.
+* `invoice_core.py`: Shared parsing, validation, and repeatable renaming.
+* `invoice_merge.py`: Shared multi-page layout and structured results.
+* `tests/`: PDF regression and complete CLI process tests.
 * `invoiceTool.py`: (Legacy) Script for renaming only.
 
 ### 🔧 Dependencies
 
-This project is developed using Python 3.x.
+Validated on Windows 11 with Python 3.12. Use a project virtual environment; dependency versions are recorded in the requirements files and constraints.txt.
 
 1.  Clone the repository:
-    ```bash
-    git clone [https://github.com/qingfpc/PDF-Invoice-Renamer.git](https://github.com/qingfpc/PDF-Invoice-Renamer.git)
+    ```powershell
+    git clone https://github.com/qingfpc/PDF-Invoice-Renamer.git
     ```
 
-2.  Install dependencies (Added `pymupdf` for merging):
-    ```bash
-    pip install pdfplumber pymupdf
+2.  Create an environment and install dependencies:
+    ```powershell
+    cd PDF-Invoice-Renamer
+    python -m venv .venv
+    .\.venv\Scripts\python.exe -m pip install -r requirements.txt
     ```
 
 3.  Run the script:
-    ```bash
-    python invoice_master.py
+    ```powershell
+    .\.venv\Scripts\python.exe invoiceMaster.py
     ```
 
 ### 📦 How to Build EXE
 
 If you modify the code and want to repackage it:
 
-1.  Install PyInstaller:
-    ```bash
-    pip install pyinstaller
-    ```
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+pwsh -NoLogo -NoProfile -File .\build.ps1
+```
 
-2.  Build command (for the master script):
-    ```bash
-    pyinstaller --onefile --name InvoiceHelper invoice_master.py
-    ```
+The script builds all three EXEs in `dist/` using the release names listed above. Build outputs are ignored by Git.
+
+### Tests and module usage
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+.\.venv\Scripts\python.exe renameInvoices.py "D:\Invoices" --format "{number}_{amount}"
+```
+
+After building, run the same interactive tests against all three EXEs:
+
+```powershell
+$env:INVOICE_TEST_EXE_DIR = (Join-Path (Get-Location) 'dist')
+.\.venv\Scripts\python.exe -m unittest tests.test_cli -v
+Remove-Item Env:\INVOICE_TEST_EXE_DIR
+```
+
+Tests create temporary PDFs and perform real parsing, rendering, and file operations. Personal invoices are untouched.
+The `InvoiceRenamer` class remains available. `extract_invoice_data()` returns `None` for unrecognized documents;
+missing fields on recognized invoices are also `None`, never fabricated zero amounts.
+For full-digital invoices without a code, choose a format using `{number}` instead of `{code}`.
 
 ---
 
@@ -99,7 +123,7 @@ The tool comes with several common formats. You can easily add new ones in the `
 ## ⚠️ Limitations
 
 * **Standard E-Invoices Only**: Currently optimized for Chinese VAT electronic invoices. Non-standard receipts or itineraries may not be extracted accurately.
-* **No OCR Support**: If the PDF is a scanned image (text cannot be selected), this tool cannot extract information.
+* **No OCR Support**: If the PDF is a scanned image (text cannot be selected), renaming cannot extract information, but merging for printing is supported.
 
 ## 📄 License
 

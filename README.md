@@ -9,14 +9,16 @@
 ## ✨ 功能特点
 
 ### 1. 智能重命名
-* **自动提取**：利用 `pdfplumber` 提取 PDF 文本，精确识别发票代码、号码、日期、金额及销售方。
+* **自动提取**：利用 `pdfplumber` 提取 PDF 文本，识别并校验发票代码、号码、日期、金额及购销双方；缺失必要字段时保留原名。
 * **格式自定义**：支持多种重命名格式（如：`日期_销售方_金额` 或 `发票代码_发票号码`）。
-* **智能防重**：如果重命名后的文件名已存在，自动添加序号避免覆盖。
+* **智能防重**：重名时自动添加序号；重复运行保持已有名称稳定。
 
 ### 2. A4 自动排版合并
 * **智能拼版**：将两张发票上下排列放置在一张 A4 页面上（2合1），节省纸张。
-* **单张处理**：如果是奇数张发票，最后一张自动占据上半页。
-* **自定义输出**：支持将合并后的文件导出到指定目录。
+* **多页支持**：逐页处理每份 PDF；源页面总数为奇数时，最后一页放在上半页。
+* **印章保留**：统一使用 216 DPI 图片排版，保留可见印章和注释，合并结果的文字无法选中。
+* **失败汇总**：部分失败会明确提示遗漏；全部失败不生成空白结果。已有合集自动跳过。
+* **自定义输出**：接受目录或完整 PDF 文件名，自动创建目录；已有输出不覆盖，另加序号。
 
 ### 3. 便捷易用
 * **批量处理**：一键处理文件夹内所有 PDF 文件。
@@ -49,41 +51,62 @@
 
 * `invoiceMaster.py`: **[推荐] 全功能主程序**。整合了重命名与合并功能，提供完整的交互式 CLI。
 * `mergeInvoices.py`: **独立合并脚本**。仅包含 A4 排版合并逻辑。
-* `renameInvoices.py`: **核心重命名逻辑**。封装了 PDF 解析类，适合模块化调用。
+* `renameInvoices.py`: **兼容重命名类与命令行入口**，可传入目录和命名格式。
+* `invoice_core.py`: **共享解析与重命名逻辑**，返回每个文件的处理结果。
+* `invoice_merge.py`: **共享多页排版逻辑**，返回页数、失败项和输出位置。
+* `tests/`: 真实 PDF 文件的回归测试与完整命令行流程测试。
 * `invoiceTool.py`: (旧版) 仅包含重命名功能的入口脚本。
 
 ### 🔧 环境依赖
 
-本项目使用 Python 3.x 开发。
+已在 Windows 11、Python 3.12 上验证。建议使用项目虚拟环境，依赖版本见 requirements 文件和 constraints.txt。
 
 1.  克隆仓库：
-    ```bash
-    git clone [https://github.com/qingfpc/PDF-Invoice-Renamer.git](https://github.com/qingfpc/PDF-Invoice-Renamer.git)
+    ```powershell
+    git clone https://github.com/qingfpc/PDF-Invoice-Renamer.git
     ```
 
-2.  安装依赖库 (新增 pymupdf 用于处理合并)：
-    ```bash
-    pip install pdfplumber pymupdf
+2.  创建环境并安装依赖：
+    ```powershell
+    cd PDF-Invoice-Renamer
+    python -m venv .venv
+    .\.venv\Scripts\python.exe -m pip install -r requirements.txt
     ```
 
 3.  运行脚本：
-    ```bash
-    python invoice_master.py
+    ```powershell
+    .\.venv\Scripts\python.exe invoiceMaster.py
     ```
 
 ### 📦 如何打包成 EXE
 
 如果你修改了代码并想重新打包，请使用 `PyInstaller`：
 
-1.  安装 PyInstaller：
-    ```bash
-    pip install pyinstaller
-    ```
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+pwsh -NoLogo -NoProfile -File .\build.ps1
+```
 
-2.  执行打包命令 (打包主程序)：
-    ```bash
-    pyinstaller --onefile --name InvoiceHelper invoice_master.py
-    ```
+脚本在 `dist/` 生成三个 EXE，名称与下载说明一致。构建产物不提交到 Git。
+
+### 测试与模块调用
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+.\.venv\Scripts\python.exe renameInvoices.py "D:\发票" --format "{number}_{amount}"
+```
+
+构建完成后，可复用交互流程测试验证三个 EXE：
+
+```powershell
+$env:INVOICE_TEST_EXE_DIR = (Join-Path (Get-Location) 'dist')
+.\.venv\Scripts\python.exe -m unittest tests.test_cli -v
+Remove-Item Env:\INVOICE_TEST_EXE_DIR
+```
+
+测试会创建临时 PDF 并实际读写、渲染；不会修改个人发票。`InvoiceRenamer` 类继续可用。
+`extract_invoice_data()` 对不可识别文件返回 `None`；可识别发票中缺失的字段也是 `None`，不会伪造零金额。
+全电发票没有发票代码时，选择含 `{code}` 的格式会保留原名，请改用 `{number}` 等格式。
 
 ---
 
@@ -107,7 +130,7 @@
 ## ⚠️ 局限性与已知问题
 
 * **仅支持标准电子发票**：目前主要针对中国增值税电子普通/专用发票。对于非标准的行程单、定额发票可能无法精确提取。
-* **不支持纯图片扫描件**：如果 PDF 是由图片直接转换而来（无法选中文字），本工具无法提取信息。需要 OCR 技术的支持。
+* **不支持纯图片扫描件**：如果 PDF 是由图片直接转换而来（无法选中文字），重命名功能无法提取信息；图片扫描件仍可合并打印。
 
 ## 📄 License
 
